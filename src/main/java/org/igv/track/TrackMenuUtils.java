@@ -184,6 +184,9 @@ public class TrackMenuUtils {
         JMenuItem saveSvg = new JMenuItem("Save SVG image...");
         saveSvg.addActionListener(e1 -> saveImage(track, "svg"));
         menu.add(saveSvg);
+        JMenuItem savePdf = new JMenuItem("Save PDF image...");
+        savePdf.addActionListener(e1 -> saveImage(track, "pdf"));
+        menu.add(savePdf);
 
         // Add export features
         ReferenceFrame frame = FrameManager.getDefaultFrame();

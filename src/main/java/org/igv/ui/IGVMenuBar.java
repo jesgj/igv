@@ -287,6 +287,18 @@ public class IGVMenuBar extends JMenuBar {
         menuAction.setToolTipText(SAVE_SVG_IMAGE_TOOLTIP);
         fileMenu.add(MenuAndToolbarUtils.createMenuItem(menuAction));
 
+        menuAction =
+                new MenuAction("Save PDF Image ...", null) {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        igv.saveImage(igv.getMainPanel(), "pdf");
+
+                    }
+                };
+
+        menuAction.setToolTipText(SAVE_PDF_IMAGE_TOOLTIP);
+        fileMenu.add(MenuAndToolbarUtils.createMenuItem(menuAction));
+
         // TODO -- change "Exit" to "Close" for BioClipse
         fileMenu.add(new JSeparator());      // Exit
         menuAction =
@@ -868,6 +880,18 @@ public class IGVMenuBar extends JMenuBar {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         igv.saveImage(igv.getContentPane(), "svg");
+
+                    }
+                };
+
+        menuItems.add(MenuAndToolbarUtils.createMenuItem(menuAction));
+
+        menuAction =
+                new MenuAction("Save PDF Screenshot ...", null) {
+
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        igv.saveImage(igv.getContentPane(), "pdf");
 
                     }
                 };

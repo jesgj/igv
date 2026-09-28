@@ -1010,7 +1010,7 @@ public class IGV implements IGVEventObserver {
     }
 
     final public void saveImage(Component target, String title, String extension) {
-        if ("png".equalsIgnoreCase(extension) || "svg".equalsIgnoreCase(extension)) {
+        if ("png".equalsIgnoreCase(extension) || "svg".equalsIgnoreCase(extension) || "pdf".equalsIgnoreCase(extension)) {
             contentPane.getStatusBar().setMessage("Creating image...");
             File defaultFile = new File(title + "." + extension);
             createSnapshot(target, defaultFile);
@@ -1071,7 +1071,7 @@ public class IGV implements IGVEventObserver {
             log.error(message);
             return message;
         } else if (type == ImageFileTypes.Type.EPS || type == ImageFileTypes.Type.JPEG) {
-            String message = "ERROR: " + type + " output is not supported.  Try '.png' or '.svg'";
+            String message = "ERROR: " + type + " output is not supported.  Try '.png', '.svg' or '.pdf'";
             log.error(message);
             return message;
         }
@@ -1094,7 +1094,7 @@ public class IGV implements IGVEventObserver {
         }
         fc.setFile(defaultFile.getName());
         fc.setFilenameFilter((dir, name) ->
-                name.endsWith(".jpeg") || name.endsWith(".jpg") || name.endsWith(".png") || name.endsWith(".svg"));
+                name.endsWith(".jpeg") || name.endsWith(".jpg") || name.endsWith(".png") || name.endsWith(".svg") || name.endsWith(".pdf"));
         fc.setVisible(true);
         String file = fc.getFile();
         // If a file selection was made

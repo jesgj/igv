@@ -10,6 +10,12 @@ package org.igv.ui.util;
 
 import org.apache.batik.dom.GenericDOMImplementation;
 import org.apache.batik.svggen.SVGGraphics2D;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.util.Matrix;
+import de.rototor.pdfbox.graphics2d.PdfBoxGraphics2D;
 import org.igv.logging.*;
 import org.igv.ui.UIConstants;
 import org.igv.ui.panel.Paintable;
@@ -21,6 +27,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 
+import static org.igv.ui.util.ImageFileTypes.Type.PDF;
 import static org.igv.ui.util.ImageFileTypes.Type.PNG;
 import static org.igv.ui.util.ImageFileTypes.Type.SVG;
 
@@ -79,13 +86,16 @@ public class SnapshotUtilities {
             if (type == SVG) {
                 exportScreenshotSVG((Paintable) component, file, width, height, batch);
                 return "OK";
+            } else if (type == PDF) {
+                exportScreenshotPDF((Paintable) component, file, width, height, batch);
+                return "OK";
             } else if (type == PNG) {
                 String format = "png";
                 String[] exts = new String[]{"." + format};
                 exportScreenShotBufferedImage((Paintable) component, file, width, height, exts, format, batch);
                 return "OK";
             } else {
-                final String message = "No image write for file type: " + file + " Try '.png' or '.svg'";
+                final String message = "No image write for file type: " + file + " Try '.png', '.svg' or '.pdf'";
                 MessageUtils.showMessage(message);
                 return "ERROR: " + message;
             }
@@ -131,6 +141,65 @@ public class SnapshotUtilities {
     }
 
     /**
+     * Export the specified {@code target} component as a vector PDF to the given file.
+     * <p>
+     * The drawing reuses the same {@code paintOffscreen} path as the SVG and PNG exports, so the PDF
+     * matches the on-screen tracks.  Unlike SVG (verbose XML, one element per drawn primitive) the PDF
+     * content stream is deflated, so dense tracks (alignments, coverage) produce much smaller files that
+     * remain sharp at any zoom and print correctly.
+     * <p>
+     * Pixels map 1:1 to PDF points (1/72 inch).  Text is vectorized by default, so no fonts are embedded
+     * and the output renders identically on all viewers.
+     */
+    private static void exportScreenshotPDF(Paintable target, File selectedFile, int width, int height, boolean batch) throws IOException {
+
+        selectedFile = fixFileExt(selectedFile, new String[]{"pdf"}, "pdf");
+
+        if (width <= 0 || height <= 0) {
+            throw new IOException("Cannot export PDF: component has not been laid out (width=" + width + ", height=" + height + ")");
+        }
+
+        // PDF viewers cap pages at 14400pt; tile tall snapshots vertically rather than failing.
+        final int maxPageHeight = 14400;
+        int pages = Math.max(1, (height + maxPageHeight - 1) / maxPageHeight);
+
+        try (PDDocument document = new PDDocument()) {
+            for (int p = 0; p < pages; p++) {
+                int y0 = p * maxPageHeight;
+                int pageHeight = Math.min(maxPageHeight, height - y0);
+
+                PdfBoxGraphics2D pdfGraphics = new PdfBoxGraphics2D(document, width, pageHeight);
+                try {
+                    final Color background = UIConstants.getTrackPanelBackground();
+                    pdfGraphics.setBackground(background);
+                    pdfGraphics.setColor(background);
+                    pdfGraphics.fillRect(0, 0, width, pageHeight);
+
+                    // Shift the drawing up so page p shows the [y0, y0 + pageHeight) slice.
+                    // Content outside the (0,0,width,pageHeight) bbox is clipped by the XForm.
+                    Graphics2D g = (Graphics2D) pdfGraphics.create();
+                    try {
+                        g.translate(0, -y0);
+                        paintImage(target, g, width, height, batch);
+                    } finally {
+                        g.dispose();
+                    }
+                } finally {
+                    pdfGraphics.dispose();
+                }
+
+                PDPage page = new PDPage(new PDRectangle(width, pageHeight));
+                document.addPage(page);
+                try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
+                    contentStream.transform(new Matrix());
+                    contentStream.drawForm(pdfGraphics.getXFormObject());
+                }
+            }
+            document.save(selectedFile);
+        }
+    }
+
+    /**
      * Export the specified {@code target} component as a {@code BufferedImage} to the given file.
      *
      * @param target
@@ -164,7 +233,7 @@ public class SnapshotUtilities {
             log.debug("Writing image to " + selectedFile.getAbsolutePath());
             boolean success = ImageIO.write(image, format, selectedFile);
             if (!success) {
-                MessageUtils.showMessage("Error writing image file of type: " + format + ". Try .png or .svg");
+                MessageUtils.showMessage("Error writing image file of type: " + format + ". Try .png, .svg or .pdf");
             }
         }
     }
