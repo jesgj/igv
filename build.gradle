@@ -113,6 +113,8 @@ dependencies {
             [group: 'org.netbeans.external', name: 'AbsoluteLayout', version: 'RELEASE110'],
             [group: 'com.formdev', name: 'flatlaf', version: '3.5.4', classifier: 'no-natives'],
             [group: 'org.json', name: 'json', version: '20250517'],
+            [group: 'org.apache.pdfbox', name: 'pdfbox', version: '3.0.8'],
+            [group: 'de.rototor.pdfbox', name: 'graphics2d', version: '3.0.5'],
 
             // Amazon deps
             [group: 'software.amazon.awssdk', name: 'cognitoidentity', version: amazonVersion],

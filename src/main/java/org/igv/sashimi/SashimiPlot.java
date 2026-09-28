@@ -505,6 +505,12 @@ public class SashimiPlot extends JFrame implements IGVEventObserver {
                 IGV.getInstance().createSnapshot(SashimiPlot.this.sashimiContentPane, defaultFile);
             });
 
+            JMenuItem savePdfImageItem = new JMenuItem("Save PDF Image...");
+            savePdfImageItem.addActionListener(e15 -> {
+                File defaultFile = new File("Sashimi.pdf");
+                IGV.getInstance().createSnapshot(SashimiPlot.this.sashimiContentPane, defaultFile);
+            });
+
             // Coverage ranges -- these apply to current plot only
             menu.add(new JLabel("Junction Coverage Display"));
             menu.add(setCoverageDataRange);
@@ -531,6 +537,7 @@ public class SashimiPlot extends JFrame implements IGVEventObserver {
 
             menu.add(savePngImageItem);
             menu.add(saveSvgImageItem);
+            menu.add(savePdfImageItem);
 
             return menu;
         }
